@@ -5,6 +5,8 @@ import wikipedia
 import webbrowser
 from gtts import gTTS
 import os
+
+from pvrecorder import PvRecorder
 from pygame import mixer
 from mutagen.mp3 import MP3
 import urllib.request
@@ -13,6 +15,7 @@ import re
 import webbrowser as wb
 import subprocess
 import pyautogui
+import pvporcupine
 
 
 def duration_detector(length):
@@ -32,7 +35,7 @@ def talk():
         data = ""
         try:
             data = input.recognize_google(audio)
-            print("Your question is, " + data)
+            print("You said: " + data)
 
         except sr.UnknownValueError:
             print("Sorry I did not hear your question, Please repeat again.")
@@ -44,7 +47,6 @@ count = 0
 
 def respond(output):
     global count
-
     tts = gTTS(text=output, lang='en')
     tts.save(f'speech{count % 2}.mp3')
     mixer.init()
@@ -55,22 +57,40 @@ def respond(output):
     count += 1
 
 
+def get_next_audio_frame():
+    pass
+
+
 if __name__ == '__main__':
-    respond("Hi, I am Marcin your personal desktop assistant")
+    respond("Hi, I am your very own personal desktop assistant, how can I help you sweetheart?")
     num = 0
-    while (1):
+    handler = pvporcupine.create(keywords=['porcupine', 'terminator', 'computer'], sensitivities=[0.6, 0.6, 0.6])
+    # print(pvporcupine.KEYWORDS)
+    recorder = PvRecorder(device_index=1, frame_length=handler.frame_length)
+
+    while True:
+        result = -1
+        recorder.start()
+        while result < 0:
+            pcm = recorder.read()
+            result = handler.process(pcm)
+            if result >= 0:
+                print('[%s] Detected %s' % (str(datetime.time), result))
+                recorder.stop()
+
+        respond("Yes?")
+
         num += 1
-        respond("How can I help you?")
         text = talk().lower()
         print(text)
         if text == 0:
             continue
 
-        if "goodbye" in str(text) or "exit" in str(text) or "bye" in str(text):
+        elif "goodbye" in str(text) or "exit" in str(text) or "bye" in str(text):
             respond("Ok bye and take care")
             break
 
-        if 'wikipedia' in text:
+        elif 'wikipedia' in text:
             respond('Searching Wikipedia')
             text = text.replace("wikipedia", "")
             results = wikipedia.summary(text, sentences=3)
@@ -128,5 +148,21 @@ if __name__ == '__main__':
         elif 'previous' in text:
             pyautogui.press("prevtrack")
             pyautogui.press("prevtrack")
+
+        elif 'volume' in text:
+            if 'up' in text:
+                pyautogui.press("volumeup")
+
+            if 'down' in text:
+                pyautogui.press("volumedown")
+
+            if 'mute' in text:
+                pyautogui.press("volumemute")
+
+        elif 'tab' in text:
+            pyautogui.keyDown('ctrl')
+            pyautogui.press('w')
+            pyautogui.keyUp('ctrl')
         else:
-            respond("Application not available")
+            print("Application not available")
+            # respond("Application not available")
