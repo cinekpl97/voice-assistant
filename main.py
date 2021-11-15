@@ -5,9 +5,14 @@ import wikipedia
 import webbrowser
 from gtts import gTTS
 import os
-from selenium import webdriver
 from pygame import mixer
 from mutagen.mp3 import MP3
+import urllib.request
+import urllib.parse
+import re
+import webbrowser as wb
+import subprocess
+import pyautogui
 
 
 def duration_detector(length):
@@ -61,7 +66,7 @@ if __name__ == '__main__':
         if text == 0:
             continue
 
-        if "stop" in str(text) or "exit" in str(text) or "bye" in str(text):
+        if "goodbye" in str(text) or "exit" in str(text) or "bye" in str(text):
             respond("Ok bye and take care")
             break
 
@@ -95,18 +100,33 @@ if __name__ == '__main__':
             time.sleep(5)
 
         elif 'youtube' in text:
-            driver = webdriver.Edge(executable_path=r'D:\PROGRAMOWANIE\Python programy\voiceAssistant\msedgedriver.exe')
-            driver.implicitly_wait(1)
-            driver.maximize_window()
-            respond("Opening in youtube")
             indx = text.split().index('youtube')
             query = text.split()[indx + 1:]
-            respond(f"Trying to search for {query}")
-            driver.get("http://www.youtube.com/results?search_query=" + '+'.join(query))
+            respond(f"Opening in YouTube and trying to search for {query}")
+            query_string = urllib.parse.urlencode({"search_query": query})
+            html_content = urllib.request.urlopen("https://www.youtube.com.hk/results?" + query_string)
+            search_results = re.findall(r'url\":\"/watch\?v=(.*?(?=\"))', html_content.read().decode())
+            if search_results:
+                print("http://www.youtube.com/watch?v=" + search_results[0])
+                wb.open_new("http://www.youtube.com/watch?v={}".format(search_results[0]))
 
-        elif "open word" in text:
+        elif 'open word' in text:
             respond("Opening Microsoft Word")
             os.startfile('Mention location of Word in your system')
 
+        elif 'spotify' in text:
+            respond("Opening Spotify")
+            subprocess.call(['C:\\Users\\Cinek\\AppData\\Roaming\\Spotify\\Spotify.exe'])
+
+        elif 'music' in text:
+            if 'play' or 'pause' or 'stop' in text:
+                pyautogui.press("playpause")
+
+        elif 'next' in text:
+            pyautogui.press("nexttrack")
+
+        elif 'previous' in text:
+            pyautogui.press("prevtrack")
+            pyautogui.press("prevtrack")
         else:
             respond("Application not available")
