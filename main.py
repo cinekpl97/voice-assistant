@@ -5,7 +5,6 @@ import wikipedia
 import webbrowser
 from gtts import gTTS
 import os
-
 from pvrecorder import PvRecorder
 from pygame import mixer
 from mutagen.mp3 import MP3
@@ -19,11 +18,11 @@ import pvporcupine
 
 
 def duration_detector(length):
-    hours = length // 3600  # calculate in hours
+    hours = length // 3600
     length %= 3600
-    mins = length // 60  # calculate in minutes
+    mins = length // 60
     length %= 60
-    seconds = length  # calculate in seconds
+    seconds = length
 
     return hours, mins, seconds
 
@@ -63,14 +62,17 @@ def get_next_audio_frame():
 
 if __name__ == '__main__':
     respond("Hi, I am your very own personal desktop assistant, how can I help you sweetheart?")
-    num = 0
+    recording_number = 0
+    # tutaj wybieramy słowa klucze, które będą uruchamiać asystenta
     handler = pvporcupine.create(keywords=['porcupine', 'terminator', 'computer'], sensitivities=[0.6, 0.6, 0.6])
+    # tutaj możecie podejrzeć słowa klucze, które są free
     # print(pvporcupine.KEYWORDS)
     recorder = PvRecorder(device_index=1, frame_length=handler.frame_length)
 
     while True:
         result = -1
         recorder.start()
+        # to jest patent, który nasłuchuje słowo klucz
         while result < 0:
             pcm = recorder.read()
             result = handler.process(pcm)
@@ -80,8 +82,9 @@ if __name__ == '__main__':
 
         respond("Yes?")
 
-        num += 1
+        recording_number += 1
         text = talk().lower()
+
         print(text)
         if text == 0:
             continue
@@ -106,13 +109,23 @@ if __name__ == '__main__':
             webbrowser.open_new_tab(text)
             time.sleep(5)
 
-        # elif "calculate" or "what is" in text:
+        # elif 'calculate' or 'what is' in text:
         #     question = talk()
-        #     app_id = "Mention your API Key"
-        #     client = wolframalpha.Client(app_id)
-        #     res = client.query(question)
-        #     answer = next(res.results).text
-        #     respond("The answer is " + answer)
+        #     with open('D:\\PROGRAMOWANIE\\Python programy\\voiceAssistant\\wolframalphakey') as f:
+        #         lines = f.readlines()
+        #     app_id = lines[0]
+        #     if 'calculate' in text:
+        #         indx = text.split().index('calculate')
+        #         query = text.split()[indx + 1:]
+        #     elif 'what is' in text:
+        #         indx = text.split().index('is')
+        #         query = text.split()[indx + 1:]
+
+        # client = wolframalpha.Client(app_id=app_id)
+        # print(question)
+        # res = client.query(question)
+        # answer = next(res.results).text
+        # respond("The answer is " + answer)
 
         elif 'open google' in text:
             webbrowser.open_new_tab("https://www.google.com")
@@ -159,10 +172,6 @@ if __name__ == '__main__':
             if 'mute' in text:
                 pyautogui.press("volumemute")
 
-        elif 'tab' in text:
-            pyautogui.keyDown('ctrl')
-            pyautogui.press('w')
-            pyautogui.keyUp('ctrl')
         else:
-            print("Application not available")
-            # respond("Application not available")
+            print("There is no such command")
+            respond("There is no such command")
